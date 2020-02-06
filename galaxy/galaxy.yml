@@ -1,0 +1,32 @@
+---
+
+- hosts: galaxyservers
+  become: true
+  pre_tasks:
+    - name: Install Dependencies
+      package:
+        name: ['git', 'make', 'python-psycopg2', 'python-virtualenv']
+  handlers:
+    - name: Restart Galaxy
+      supervisorctl:
+        name: "galaxy:"
+        state: restarted
+  post_tasks:
+    - name: Change owner Galaxy dir
+      command: chown -R galaxy:galaxy /home/galaxy
+      #file:
+        #path: /home/galaxy
+        #state: directory
+        #recurse: yes
+        #owner: galaxy
+        #group: galaxy 
+  roles:
+    - galaxyproject.postgresql
+    - role: natefoo.postgresql_objects
+      become: true
+      become_user: postgres
+    - geerlingguy.pip
+    - galaxyproject.galaxy
+    - uchida.miniconda
+    - usegalaxy-eu.supervisor
+    - galaxyproject.nginx
